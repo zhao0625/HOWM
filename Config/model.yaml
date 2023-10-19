@@ -1,0 +1,138 @@
+# Training config
+# 1. experiment config
+# 2. env config
+# 3. model config
+# 4. optimization config
+# 4. other constants
+
+model_train:
+  # >>> 1. Experiment config <<<
+  # > dataset path
+  dataset: None  # datasets/shapes_train.h5
+  # > base checkpoint folder
+  save_folder: checkpoints
+  # > checkpoint folder for PyTorch Lightning
+  folder_pl: checkpoints_pl
+  # > checkpoint path when loading trained representation module
+  representation_checkpoint: None
+
+  # > env setup & constants
+  action_dim: 4
+  action_size: 4  # duplicate
+  num_objects: 5  # "K" objects in each scene
+  num_objects_total: 5  # "N" objects in the object library
+
+  # > for loading data with object configuration and negatives
+  same_config_ratio: 0.5
+
+  # > intervals in training
+  log_interval: 20
+  save_interval: 10
+  vis_interval: 2
+  eval_interval: 20  # TODO cause error? slow?
+
+  # > other training config
+  num_workers: 16
+  gpus: 1
+
+
+  # >>> 2. Model config <<<
+  encoder_type: specific
+  encoder_batch_norm: True  # enabled by default
+  transition_type: gnn  # 'gnn' or 'mlp'
+
+  embedding_dim: 2
+  hidden_dim: 512
+
+  # TODO representation
+  input_resolution: [ 50, 50 ]
+  input_dims: [ 3, 50, 50 ]
+  hidden_dims_encoder: [ 64, 64, 32 ]  # TODO use smaller network
+
+  # > For representation with Slot Attention
+  num_iterations: 3
+  slot_size: 32  # TODO previous: 32, try smaller slot size
+  # > If use an additional K+1-th slot for encoding background and other information
+  no_last_slot: False  # default = False = enabling additional 1 slot
+
+  action_hidden_dims: [ 32 ]  # TODO larger [16, 16] -> [32]
+  kernel_size: 5
+  # > kernel size of the first layer in object extractor
+  first_kernel_size: 5  # 10: default, try smaller, such as 5
+
+  # > TODO Model option - deprecated?
+  # > Vanilla C-SWM
+  vanilla_cswm: False
+  # > deprecated - obs only attention
+  mask_att_cswm: False
+  # > Homomorphic slot attention, joint version
+  homo_slot_att: False
+  # > Homomorphic Attention, decoupled version
+  decoupled_homo_att: False
+
+  # > TODO training option: use pseudo-inverse in loss computation
+  pseudo_inverse_loss: False
+
+  # > other
+  ignore_action: False
+  copy_action: False
+
+  # TODO deprecated
+  obj_encoder_type: mlp  # FIXME - mlp / self-att / homo-att / homo-binding
+  encoder: small  # previous default = medium
+  decoder: False
+  # TODO minimize action/identity encoding - set to False
+  action_encoding: False
+  identity_encoding: False
+
+
+  # >>> 3. Optimization configuration (separate for object representation and transition) <<<
+  representation:
+    lr: 0.001  # 1e-3 or 5e-4
+    batch_size: 256  # note: too large would affect performance; should scale proportionally with LR
+    epochs: 30
+
+    enable_scheduler: True
+    warmup_epochs_pct: 0.1
+    decay_epochs_pct: 0.4  # percentage of decay epoch, default = 0.2, set to 0.4
+    decay_gamma: 0.5
+
+    weight_decay: 0.
+
+    n_samples: 3  # sampling for reconstruction
+    num_sanity_val_steps: 1  # not sure for what
+
+  transition:
+    lr: 0.003  # current = 3e-3, previous = 5e-4
+    batch_size: 5120  # note: reduce if too large
+    epochs: 100
+
+    enable_scheduler: True
+    warmup_epochs_pct: 0.05  # more epochs, less warmup
+    decay_epochs_pct: 0.4  # percentage of decay epoch, default = 0.2, set to 0.4
+    decay_gamma: 0.5
+
+  # > for contrastive loss
+  sigma: 0.5
+  hinge: 1.
+
+  # > automatic mix precision
+  # https://pytorch.org/blog/accelerating-training-on-nvidia-gpus-with-pytorch-automatic-mixed-precision/
+  enable_amp: False
+
+
+# Config for evaluation
+model_eval:
+  eval_batch_size: 100
+
+  #  num_steps: 1
+  save_folder: checkpoints
+  dataset: None  # datasets/shapes_eval.h5
+  action_mapping: True  # False for C-SWM baseline
+
+  # >>> choose to evaluate in K-slot MDP or N-object full MP
+  eval_space: 'full-mdp'
+
+  # > new evaluation options
+  hard_bind: False
+  pseudo_inverse: False

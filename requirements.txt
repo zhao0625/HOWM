@@ -1,0 +1,9 @@
+torch>=1.2.0
+numpy
+gym
+sacred
+matplotlib
+h5py
+wandb==0.9.7
+hydra-core
+pymongo

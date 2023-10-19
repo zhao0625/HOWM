@@ -1,0 +1,45 @@
+
+# hydra - disable output directory
+hydra:
+  run:
+    dir: ./
+
+# Note: the data will be generated in 'joint' mode: training and eval datasets are generated together
+# This is to make sure the objects are sampled from the same object library and have different configuration
+
+config_shapes:
+  seed: 1
+
+  # > Object Library version, 'all' for Basic Shapes, 'rush_hour' for Rush Hour version
+  shapes: all
+
+  num_objects_scene: None
+  num_objects_total: None
+
+  cascade_gen: False
+  num_objects_total_list: None
+
+  # TODO pickle env files
+  pickle_library: True
+  pickle_path: './Data'
+  load_pickle_library: False
+  load_pickle_pool_only: False
+  load_pickle_file: None
+
+  num_episodes:
+    train: 1000
+    eval: 10000
+
+  data_folder: None
+  data_prefix: None
+
+  shuffle_color: True
+  check_collision: True
+  filter_collision: True
+
+  num_config_train: 20
+  num_config_eval: 20
+
+  scale_factor: 10
+  width: 5
+  height: 5
